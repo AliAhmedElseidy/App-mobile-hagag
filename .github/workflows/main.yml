@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle 8.9
+      - name: Setup Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
@@ -32,9 +32,8 @@ jobs:
           echo "GEMINI_API_KEY=AIzaSyDummyKeyForBuild" >> local.properties
           echo "API_KEY=AIzaSyDummyKeyForBuild" >> local.properties
 
-          if [ -d "app" ] && [ ! -f "app/google-services.json" ]; then
-            PKG=$(grep -Eo '(namespace|applicationId)[[:space:]]*=?[[:space:]]*["'\''][^"'\'']+["'\'']' app/build.gradle* 2>/dev/null | head -n 1 | sed -E 's/.*["'\'']([^"'\'']+)["'\''].*/\1/')
-            PKG=${PKG:-"com.hagag.app"}
+          if [ -d "app" ]; then
+            PKG="com.aistudio.hagagstudy.kpmw"
             cat <<EOF > app/google-services.json
           {
             "project_info": {
