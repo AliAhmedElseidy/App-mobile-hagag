@@ -2,7 +2,8 @@ name: Build Android APK
 
 on:
 push:
-branches: ["main"]
+branches:
+- main
 workflow_dispatch:
 
 permissions:
@@ -19,8 +20,8 @@ steps:
   - name: Set up JDK
     uses: actions/setup-java@v5
     with:
-      java-version: "17"
-      distribution: "temurin"
+      java-version: '17'
+      distribution: temurin
 
   - name: Validate Gradle Wrapper
     shell: bash
@@ -28,7 +29,7 @@ steps:
       set -euo pipefail
 
       if [ ! -f "./gradlew" ]; then
-        echo "ERROR: gradlew was not found in the repository root."
+        echo "ERROR: gradlew was not found."
         exit 1
       fi
 
@@ -38,21 +39,15 @@ steps:
       fi
 
       chmod +x ./gradlew
-
-      echo "Gradle wrapper configuration:"
       grep '^distributionUrl=' gradle/wrapper/gradle-wrapper.properties
 
   - name: Accept Android SDK licenses
     shell: bash
     run: |
-      set -euo pipefail
-      yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses \
-        >/dev/null 2>&1 || true
+      yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
 
   - name: Configure local Android SDK
-    shell: bash
-    run: |
-      echo "sdk.dir=$ANDROID_HOME" > local.properties
+    run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
   - name: Build Debug APK
     shell: bash
@@ -76,8 +71,6 @@ steps:
       if [ -f build.log ]; then
         echo "## Build failure details" >> "$GITHUB_STEP_SUMMARY"
         echo '```text' >> "$GITHUB_STEP_SUMMARY"
-        grep -E -A 6 \
-          'FAILURE:|What went wrong:|Execution failed|Could not|error:' \
-          build.log | tail -n 80 >> "$GITHUB_STEP_SUMMARY" || true
+        grep -E -A 6 'FAILURE:|What went wrong:|Execution failed|Could not|error:' build.log | tail -n 80 >> "$GITHUB_STEP_SUMMARY" || true
         echo '```' >> "$GITHUB_STEP_SUMMARY"
       fi
