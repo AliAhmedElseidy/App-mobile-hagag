@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ذاكر يا حجاج</string>
+    <string name="greeting_title">ازيك يا حجاج، ذاكر يا فاشل!</string>
+    <string name="greeting_subtitle">الدفعة كلها بتذاكر وأنت ماسك الموبايل!</string>
+    <string name="shout_button_label">سمعني التوبيخ تاني 📢</string>
+    <string name="roast_button_label">جرعة تهزيء جديدة 🎤</string>
+    <string name="timer_title">مؤقت التركيز</string>
+    <string name="tasks_title">مهام المذاكرة</string>
+    <string name="meter_title">مؤشر الدحيح</string>
+</resources>

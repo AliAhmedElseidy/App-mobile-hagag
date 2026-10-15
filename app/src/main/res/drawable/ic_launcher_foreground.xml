@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Megaphone body (Tilted shouting megaphone) -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M32,45 L48,36 L48,64 L32,55 Z" />
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M48,36 L66,26 L66,74 L48,64 Z" />
+    <!-- Megaphone front rim -->
+    <path
+        android:fillColor="#FCD34D"
+        android:pathData="M66,26 C68,26 70,36.7 70,50 C70,63.3 68,74 66,74 Z" />
+    <!-- Handle -->
+    <path
+        android:fillColor="#D97706"
+        android:pathData="M38,52 L44,52 L42,68 L36,68 Z" />
+    <!-- Open Book base at bottom -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M30,76 Q54,72 54,80 Q54,72 78,76 L78,86 Q54,82 54,90 Q54,82 30,86 Z" />
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M32,77 Q53,74 53,81 L53,88 Q32,84 32,77 Z" />
+    <path
+        android:fillColor="#E0F2FE"
+        android:pathData="M76,77 Q55,74 55,81 L55,88 Q76,84 76,77 Z" />
+    <!-- Sound Waves shouting -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M73,42 C76,44.5 78,47 78,50 C78,53 76,55.5 73,58 L75,61 C79,58 82,54.5 82,50 C82,45.5 79,42 75,39 Z" />
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M79,35 C84,39 88,44 88,50 C88,56 84,61 79,65 L81,68 C87,63.5 92,57 92,50 C92,43 87,36.5 81,32 Z" />
+    <!-- Energy Sparkle -->
+    <path
+        android:fillColor="#FDE047"
+        android:pathData="M54,20 L56,25 L61,27 L56,29 L54,34 L52,29 L47,27 L52,25 Z" />
+</vector>

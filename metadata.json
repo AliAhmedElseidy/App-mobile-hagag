@@ -1,0 +1,6 @@
+{
+  "name": "ذاكر يا حجاج",
+  "description": "تطبيق تحفيزي فكاهي لحجاج للدراسة والمذاكرة مع تنبيهات صوتية ومؤقت بومودورو وقائمة مهام",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
