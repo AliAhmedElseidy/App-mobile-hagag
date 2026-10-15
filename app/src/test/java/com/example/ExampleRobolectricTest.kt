@@ -72,4 +72,18 @@ class ExampleRobolectricTest {
     val claimedReward = repo.rewards.value.find { it.id == rewardId }
     assertTrue(claimedReward?.isClaimed == true)
   }
+
+  @Test
+  fun `verify GeminiChatService provides Egyptian study responses offline`() {
+    val mathResponse = com.example.ai.GeminiChatService.getOfflineSmartResponse("مسألة رياضيات في الجذر التكعيبي", "حجاج")
+    assertTrue(mathResponse.contains("حجاج"))
+    assertTrue(mathResponse.contains("رياضيات") || mathResponse.contains("الجذر"))
+
+    val scienceResponse = com.example.ai.GeminiChatService.getOfflineSmartResponse("جدول مندليف والعلوم", "حجاج")
+    assertTrue(scienceResponse.contains("حجاج"))
+    assertTrue(scienceResponse.contains("مندليف") || scienceResponse.contains("العلوم"))
+
+    val motivationResponse = com.example.ai.GeminiChatService.getOfflineSmartResponse("أنا كسلان ومش قادر أذاكر", "حجاج")
+    assertTrue(motivationResponse.contains("حجاج"))
+  }
 }

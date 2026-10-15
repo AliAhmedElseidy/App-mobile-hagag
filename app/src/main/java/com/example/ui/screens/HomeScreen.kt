@@ -238,12 +238,12 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "شات مستر حجاج الفرفوش (AI) 🧠",
+                                    text = "محادثة صوتية لايف مع مستر حجاج (Gemini Live) 🎙️🧠",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "اسأله في أي مسألة أو درس في تانية إعدادي!",
+                                    text = "اتكلم معاه بصوتك يشرحلك أي مسألة في تانية إعدادي ويهزر معاك!",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFFBAE6FD)
                                 )
@@ -251,7 +251,7 @@ fun HomeScreen(
                         }
 
                         TextButton(onClick = onNavigateToChat) {
-                            Text("اسأل 💬", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold)
+                            Text("تحدث 🎙️", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

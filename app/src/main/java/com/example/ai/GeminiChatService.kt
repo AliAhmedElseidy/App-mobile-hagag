@@ -20,20 +20,25 @@ data class ChatMessage(
 
 object GeminiChatService {
 
-    private const val MODEL_NAME = "gemini-3.8-flash"
+    // Default supported model per AI Studio Gemini API guidelines
+    private const val MODEL_NAME = "gemini-3.5-flash"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent"
 
+    // OkHttpClient with 60-second timeouts per guidelines
     private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private const val SYSTEM_PROMPT = """
-أنت "مستر حجاج الفرفوش"، مدرس مصري خبير في مناهج تانية إعدادي (رياضيات، علوم، لغة عربية، إنجليزي).
-تتحدث بالعامية المصرية المرحة مع هزار خفيف وتشجيع دائم لطالب تانية إعدادي اسمه حجاج.
-تشرح أي درس أو مسألة يطلبها بأسلوب مبسط جداً وبالأمثلة المصرية الواقعية، وتشجعه على فتح المكافآت وجمع جلسات البومودورو.
-أجوبتك مختصرة، مفيدة، ودمها خفيف!
+أنت "مستر حجاج الفرفوش"، مدرس مصري خفيف الظل متخصص في تدريس طالب في الصف الثاني الإعدادي (تانية إعدادي) اسمه حجاج.
+المواد التي تساعده فيها: الرياضيات، العلوم، اللغة العربية، واللغة الإنجليزية.
+قواعدك الأساسية:
+1. تحدث دائماً بالعامية المصرية البسيطة والمرحة مع هزار خفيف وتشجيع دائم لطيف ("يا وحش"، "يا دحيح"، "يا بطل تانية إعدادي").
+2. ردك يجب أن يكون قصيراً جداً ومبسطاً (من 2 إلى 4 جمل فقط) ليكون خفيفاً ومناسباً للاستماع الصوتي المباشر.
+3. التزم فقط بالمذاكرة والدروس والمسائل والتشجيع على إنهاء جلسات البومودورو وفتح المكافآت.
+4. استخدم تشبيهات مصرية مرحة وسهلة الفهم تناسب ولد في تانية إعدادي.
     """
 
     suspend fun sendMessage(
@@ -47,7 +52,7 @@ object GeminiChatService {
             ""
         }
 
-        // If key is empty or default template placeholder, return smart offline fallback
+        // If key is empty or default template placeholder, return smart Egyptian offline response
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY" || apiKey == "AIzaSyDummyKeyForBuild") {
             return@withContext getOfflineSmartResponse(userMessage, studentName)
         }
@@ -55,20 +60,20 @@ object GeminiChatService {
         try {
             val contentsArray = JSONArray()
 
-            // System instruction or initial context turn
+            // System context turn
             val systemObj = JSONObject().apply {
                 put("role", "user")
-                put("parts", JSONArray().put(JSONObject().put("text", "تعليمات: $SYSTEM_PROMPT الطالب اسمه $studentName")))
+                put("parts", JSONArray().put(JSONObject().put("text", "تعليمات الشخصية: $SYSTEM_PROMPT. اسم الطالب: $studentName. جاوب بالعامية المصرية في 2 أو 3 جمل فقط.")))
             }
             contentsArray.put(systemObj)
 
             val modelAck = JSONObject().apply {
                 put("role", "model")
-                put("parts", JSONArray().put(JSONObject().put("text", "يا هلا بيك وبحبيب قلبي $studentName دحيح تانية إعدادي القادم! اؤمرني يا بطل!")))
+                put("parts", JSONArray().put(JSONObject().put("text", "يا هلا بحبيب قلبي $studentName دحيح تانية إعدادي! اسأل وأنا أجاوبك بالمللي وبدون كلكعة!")))
             }
             contentsArray.put(modelAck)
 
-            // Add previous recent history turns (limit last 6)
+            // Add previous recent history turns (limit last 6 turns to keep context lightweight)
             val recentHistory = history.takeLast(6)
             for (msg in recentHistory) {
                 val turn = JSONObject().apply {
@@ -89,7 +94,7 @@ object GeminiChatService {
                 put("contents", contentsArray)
                 put("generationConfig", JSONObject().apply {
                     put("temperature", 0.7)
-                    put("maxOutputTokens", 600)
+                    put("maxOutputTokens", 300)
                 })
             }
 
@@ -110,41 +115,47 @@ object GeminiChatService {
                     val content = candidate.optJSONObject("content")
                     val parts = content?.optJSONArray("parts")
                     if (parts != null && parts.length() > 0) {
-                        return@withContext parts.getJSONObject(0).optString("text", "عاش يا $studentName! إجابة تمام!")
+                        val replyText = parts.getJSONObject(0).optString("text", "")
+                        if (replyText.isNotBlank()) {
+                            return@withContext replyText.trim()
+                        }
                     }
                 }
             }
 
-            // Fallback if network failed
+            // Fallback if response was not ok or parse failed
             getOfflineSmartResponse(userMessage, studentName)
         } catch (_: Exception) {
             getOfflineSmartResponse(userMessage, studentName)
         }
     }
 
-    private fun getOfflineSmartResponse(query: String, studentName: String): String {
+    fun getOfflineSmartResponse(query: String, studentName: String): String {
         val q = query.lowercase()
         return when {
-            q.contains("رياضيات") || q.contains("جذر") || q.contains("مثلث") -> {
-                "يا هلا يا $studentName! في رياضيات تانية إعدادي افتكر دايماً: الجذر التكعيبي بيحافظ على الإشارة السالبة، ونقطة تقاطع المتوسطات بتقسم بنسبة 1 : 2 من جهة القاعدة! زاكر مسألتين وتعال افتح مكافأة البلايستيشن! 📐🎮"
+            q.contains("رياضيات") || q.contains("جذر") || q.contains("تكعيب") || q.contains("متوسط") || q.contains("مثلث") -> {
+                "يا وحش الرياضيات يا $studentName! افتكر في تانية إعدادي: الجذر التكعيبي لسالب 8 هو سالب 2، ونقطة تقاطع متوسطات المثلث بتقسم بنسبة 1 إلى 2 من جهة القاعدة! حل مسألة دلوقتي وافتح مكافأتك! 📐🎮"
             }
-            q.contains("علوم") || q.contains("جدول") || q.contains("أوزون") -> {
-                "العلوم أسهل مادة يا $studentName! افتكر مندليف رتب حسب الوزن الذري وموزلي حسب العدد الذري، وطبقة الأوزون في الستراتوسفير بتحمينا من الأشعة فوق البنفسجية! ذاكر ربع ساعة واشرب عصير! 🧪✨"
+            q.contains("علوم") || q.contains("جدول") || q.contains("دوري") || q.contains("أوزون") || q.contains("غلاف") || q.contains("ذري") -> {
+                "العلوم في جيبك يا $studentName! جدول مندليف رتب حسب الوزن الذري، وموزلي رتب حسب العدد الذري.. وطبقة الأوزون موجودة في الستراتوسفير عشان تحمينا! ركز 10 دقايق وهتبقى دحيح! 🧪✨"
             }
-            q.contains("عربي") || q.contains("نحو") || q.contains("معرب") -> {
-                "النحو في جيبك يا باشا! الجمل بعد النكرات صفات وبعد المعارف أحوال، والأسماء الموصولة مبنية ما عدا اللذان واللتان معربان إعراب المثنى! فخور بيك يا دحيح! 📖"
+            q.contains("عربي") || q.contains("نحو") || q.contains("معرب") || q.contains("مبني") || q.contains("نعت") || q.contains("حال") -> {
+                "النحو لعبتنا يا $studentName! الجمل بعد النكرات صفات (نعت) وبعد المعارف أحوال.. وكل الأسماء الموصولة مبنية ما عدا (اللذان واللتان) معربتان زي المثنى! شاطر ومصحصح دايماً! 📖"
             }
-            q.contains("انجليزي") || q.contains("إنجليزي") || q.contains("english") -> {
-                "English is very easy ya $studentName! Remember: While + Past Continuous (was/were + v-ing), and First Conditional (If + present simple -> will + inf)! Keep going ya champion! 🇬🇧"
+            q.contains("انجليزي") || q.contains("إنجليزي") || q.contains("english") || q.contains("while") || q.contains("grammar") -> {
+                "إنجليزي تانية إعدادي سهل جداً يا $studentName! قاعدة While بيجي بعدها Past Continuous يعني was/were وفعل فيه ing.. ذاكر الدرس واشربلك عصير يا بطل! 🇬🇧☕"
             }
-            q.contains("مكافأة") || q.contains("لعب") || q.contains("هدية") -> {
-                "عايز مكافأة يا سيدي؟ خلص جلسة بومودورو 25 دقيقة دلوقتي وشوف قائمة المكافآت هتفتحلك شيكولاتة أو 30 دقيقة لعب فوراً! المذاكرة بتبقى أحلى بالمكافأة الملموسة! 🎁🍫"
+            q.contains("مكافأة") || q.contains("مكافات") || q.contains("لعب") || q.contains("بلايستيشن") || q.contains("حلوى") -> {
+                "المكافأة مستنياك يا $studentName! خلص جلسة بومودورو 25 دقيقة تركيز من غير تشتيت، وروح فوراً لصندوق المكافآت وافتح 30 دقيقة لعب أو حلوى تستاهلها! 🎁🎮"
             }
-            q.contains("كسلان") || q.contains("مش قادر") || q.contains("تعبان") -> {
-                "سيب الدلع يا $studentName! قوم اغسل وشك بماية ساقعة، افتح الشباك، واقعد 10 دقايق بس على المكتب.. هتلاقي الحماس رجعلك وتانية إعدادي في جيبك! 🔥"
+            q.contains("كسلان") || q.contains("مش قادر") || q.contains("زهقان") || q.contains("تعبان") || q.contains("شجعني") -> {
+                "ولا كسلان ولا حاجة يا $studentName! قوم اغسل وشك بماية باردة، اقعد على مكتبك وافتح المؤقت 15 دقيقة بس.. هتلاقي عقلك نور وتانية إعدادي بقت أسهل سنة عدت عليك! 🔥💪"
+            }
+            q.contains("امتحان") || q.contains("مستعد") || q.contains("خايف") -> {
+                "الامتحان ده لعب عيال لواحد زيك يا $studentName! راجع الكويز السريع اللي في التطبيق واقرأ ملخص الدرس.. مستر حجاج واثق فيك وهتطلع من الأوائل إن شاء الله! 🏆"
             }
             else -> {
-                "الله عليك يا $studentName! سؤال في الجون! أهم حاجة تذاكر بومودورو بتركيز بدون تشتيت، وبعدها تروح تفتح المكافأة اللي تستاهلها! اسألني في أي درس واقف معاك في تانية إعدادي وأنا أشرحهولك بالمللي! 💡👏"
+                "عاش يا $studentName! سؤال في الجون! أهم حاجة دلوقتي تقفل التشتيت وتركز في مادة واحدة، اسألني في أي مسألة أو قاعدة في تانية إعدادي وأنا أشرحهالك في ثواني وبدون تعقيد! 💡👏"
             }
         }
     }

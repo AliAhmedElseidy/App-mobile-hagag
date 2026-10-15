@@ -79,6 +79,13 @@ class HagagViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isChatLoading = MutableStateFlow(false)
     val isChatLoading: StateFlow<Boolean> = _isChatLoading.asStateFlow()
+
+    // Gemini Live Voice Manager with "مستر حجاج الفرفوش"
+    val liveManager = com.example.ai.HagagVoiceLiveManager(application, ttsManager, viewModelScope)
+    val liveState: StateFlow<com.example.ai.LiveState> = liveManager.liveState
+    val liveUserSpokenText: StateFlow<String> = liveManager.userSpokenText
+    val liveAssistantReplyText: StateFlow<String> = liveManager.assistantReplyText
+    val liveSoundLevel: StateFlow<Float> = liveManager.soundLevel
     val autoGreeting: StateFlow<Boolean> = repository.autoGreeting
     val speechRate: StateFlow<Float> = repository.speechRate
     val speechPitch: StateFlow<Float> = repository.speechPitch
@@ -464,6 +471,37 @@ class HagagViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // ==========================================
+    // GEMINI LIVE VOICE CONTROLS
+    // ==========================================
+    fun startLiveListening() {
+        triggerHaptic()
+        liveManager.startListening(userName.value)
+    }
+
+    fun stopLiveListening() {
+        triggerHaptic()
+        liveManager.stopListening()
+    }
+
+    fun stopLiveSpeaking() {
+        triggerHaptic()
+        liveManager.stopSpeaking()
+    }
+
+    fun stopLiveAll() {
+        liveManager.stopAll()
+    }
+
+    fun resetLiveState() {
+        liveManager.resetState()
+    }
+
+    fun sendLiveVoicePrompt(prompt: String) {
+        triggerHaptic()
+        liveManager.sendDirectPrompt(prompt, userName.value)
+    }
+
     private fun triggerHaptic() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -494,6 +532,7 @@ class HagagViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        liveManager.destroy()
         ttsManager.shutdown()
     }
 }
