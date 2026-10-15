@@ -20,18 +20,13 @@ jobs:
           distribution: temurin
 
       - name: Set up Android SDK
-        - uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v4
+
       - name: Prepare project
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "GEMINI_API_KEY=AIzaSyDummyKeyForBuild" >> local.properties
           echo "API_KEY=AIzaSyDummyKeyForBuild" >> local.properties
-
-          if [ -f app/build.gradle.kts ] || [ -f app/build.gradle ]; then
-            if [ ! -f app/google-services.json ]; then
-              echo "تنبيه: ملف Firebase غير موجود. لن يتم إنشاء ملف وهمي."
-            fi
-          fi
 
       - name: Build Debug APK
         run: |
