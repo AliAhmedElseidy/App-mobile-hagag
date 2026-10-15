@@ -14,15 +14,15 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,8 +45,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import com.example.notification.HagagNotificationHelper
 import com.example.ui.HagagViewModel
+import com.example.ui.screens.ChatScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.QuizScreen
+import com.example.ui.screens.RewardsScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.screens.TasksScreen
 import com.example.ui.screens.TimerScreen
@@ -76,7 +78,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        // If the user left or closed the app during an active pomodoro study session
+        // If user backgrounded app during an active pomodoro study session
         viewModel.onAppBackgrounded()
     }
 }
@@ -115,22 +117,22 @@ fun HagagStudyApp(
             testTag = "nav_timer"
         ),
         NavTab(
+            title = "المكافآت",
+            selectedIcon = Icons.Filled.CardGiftcard,
+            unselectedIcon = Icons.Outlined.CardGiftcard,
+            testTag = "nav_rewards"
+        ),
+        NavTab(
             title = "الكويز",
             selectedIcon = Icons.Filled.Psychology,
             unselectedIcon = Icons.Outlined.Psychology,
             testTag = "nav_quiz"
         ),
         NavTab(
-            title = "المهام",
-            selectedIcon = Icons.Filled.ListAlt,
-            unselectedIcon = Icons.Outlined.ListAlt,
-            testTag = "nav_tasks"
-        ),
-        NavTab(
-            title = "الإحصائيات",
-            selectedIcon = Icons.Filled.BarChart,
-            unselectedIcon = Icons.Outlined.BarChart,
-            testTag = "nav_stats"
+            title = "مستر AI",
+            selectedIcon = Icons.Filled.SmartToy,
+            unselectedIcon = Icons.Outlined.SmartToy,
+            testTag = "nav_chat"
         )
     )
 
@@ -185,13 +187,17 @@ fun HagagStudyApp(
                 0 -> HomeScreen(
                     viewModel = viewModel,
                     onNavigateToTimer = { viewModel.selectTab(1) },
-                    onNavigateToTasks = { viewModel.selectTab(3) },
-                    onNavigateToQuiz = { viewModel.selectTab(2) }
+                    onNavigateToRewards = { viewModel.selectTab(2) },
+                    onNavigateToQuiz = { viewModel.selectTab(3) },
+                    onNavigateToChat = { viewModel.selectTab(4) },
+                    onNavigateToTasks = { viewModel.selectTab(5) }
                 )
                 1 -> TimerScreen(viewModel = viewModel)
-                2 -> QuizScreen(viewModel = viewModel)
-                3 -> TasksScreen(viewModel = viewModel)
-                4 -> StatsScreen(viewModel = viewModel)
+                2 -> RewardsScreen(viewModel = viewModel)
+                3 -> QuizScreen(viewModel = viewModel)
+                4 -> ChatScreen(viewModel = viewModel)
+                5 -> TasksScreen(viewModel = viewModel)
+                6 -> StatsScreen(viewModel = viewModel)
             }
         }
     }

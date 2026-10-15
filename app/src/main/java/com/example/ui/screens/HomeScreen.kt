@@ -62,6 +62,8 @@ fun HomeScreen(
     onNavigateToTimer: () -> Unit,
     onNavigateToTasks: () -> Unit,
     onNavigateToQuiz: () -> Unit,
+    onNavigateToRewards: () -> Unit,
+    onNavigateToChat: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val userName by viewModel.userName.collectAsState()
@@ -79,7 +81,8 @@ fun HomeScreen(
             userName = userName,
             levelTitle = stats.currentLevelTitle,
             isSpeaking = isSpeaking,
-            onShoutClick = { viewModel.shoutGreeting() }
+            onShoutClick = { viewModel.shoutGreeting() },
+            onStatsClick = { viewModel.selectTab(6) }
         )
 
         LazyColumn(
@@ -151,9 +154,107 @@ fun HomeScreen(
                 )
             }
 
+            // Quick Rewards Callout Banner
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToRewards)
+                        .testTag("home_rewards_callout"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryAmber.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "🎁", fontSize = 24.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "صندوق مكافآت حجاج 🎮🍫",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "خلص جلسات بومودورو وافتح 30 دقيقة لعب أو حلوى!",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PrimaryAmber
+                                )
+                            }
+                        }
+
+                        TextButton(onClick = onNavigateToRewards) {
+                            Text("فتح 🎁", color = PrimaryAmber, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             // Quick 2nd Prep Quiz Callout
             item {
                 QuickQuizCallout(onNavigateToQuiz = onNavigateToQuiz)
+            }
+
+            // Quick AI Tutor Callout
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToChat)
+                        .testTag("home_chat_callout"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF38BDF8).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "👨‍🏫", fontSize = 22.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "شات مستر حجاج الفرفوش (AI) 🧠",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "اسأله في أي مسألة أو درس في تانية إعدادي!",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFFBAE6FD)
+                                )
+                            }
+                        }
+
+                        TextButton(onClick = onNavigateToChat) {
+                            Text("اسأل 💬", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
 
             // Genius Meter

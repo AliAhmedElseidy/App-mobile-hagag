@@ -14,6 +14,7 @@ import com.example.data.QuizQuestion
 import com.example.data.QuizRepository
 import com.example.data.RoastQuote
 import com.example.data.RoastQuotesRepository
+import com.example.data.StudyReward
 import com.example.data.StudySession
 import com.example.data.StudyTask
 import com.example.data.TaskRepository
@@ -57,11 +58,27 @@ class HagagViewModel(application: Application) : AndroidViewModel(application) {
     val isTtsReady: StateFlow<Boolean> = ttsManager.isReady
 
     val tasks: StateFlow<List<StudyTask>> = repository.tasks
+    val rewards: StateFlow<List<StudyReward>> = repository.rewards
     val sessions: StateFlow<List<StudySession>> = repository.sessions
     val focusMinutes: StateFlow<Int> = repository.focusMinutes
     val streakDays: StateFlow<Int> = repository.streakDays
     val streakBrokenAlert: StateFlow<String?> = repository.streakBrokenAlert
     val userName: StateFlow<String> = repository.userName
+
+    // Gemini AI Chatbot state
+    private val _chatMessages = MutableStateFlow<List<com.example.ai.ChatMessage>>(
+        listOf(
+            com.example.ai.ChatMessage(
+                id = "welcome",
+                sender = "model",
+                text = "يا هلا بيك يا حبيب قلبي حجاج! أنا 'مستر حجاج الفرفوش'.. اسألني في أي مسألة أو درس في تانية إعدادي، أو قولي محتاج تشجيع لفتح المكافآت! 🧠✨"
+            )
+        )
+    )
+    val chatMessages: StateFlow<List<com.example.ai.ChatMessage>> = _chatMessages.asStateFlow()
+
+    private val _isChatLoading = MutableStateFlow(false)
+    val isChatLoading: StateFlow<Boolean> = _isChatLoading.asStateFlow()
     val autoGreeting: StateFlow<Boolean> = repository.autoGreeting
     val speechRate: StateFlow<Float> = repository.speechRate
     val speechPitch: StateFlow<Float> = repository.speechPitch
@@ -387,6 +404,64 @@ class HagagViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateDailyReminder(enabled: Boolean, hour: Int, minute: Int) {
         repository.setDailyReminder(enabled, hour, minute)
+    }
+
+    // ==========================================
+    // REWARDS LOGIC (مكافآت حجاج)
+    // ==========================================
+    fun claimReward(rewardId: String) {
+        val reward = rewards.value.find { it.id == rewardId } ?: return
+        triggerSuccessVibration()
+        repository.claimReward(rewardId)
+        val name = userName.value
+        val speech = "مبروك يا $name يا وحش! استلمت مكافأة ${reward.title}.. روح استمتع بيها تستاهل بعد تعبك ومذاكرتك!"
+        ttsManager.speak(speech, pitch = speechPitch.value, rate = speechRate.value)
+    }
+
+    fun resetReward(rewardId: String) {
+        triggerHaptic()
+        repository.resetReward(rewardId)
+    }
+
+    fun addCustomReward(title: String, description: String, requiredSessions: Int, category: String, emoji: String) {
+        triggerHaptic()
+        repository.addCustomReward(title, description, requiredSessions, category, emoji)
+    }
+
+    fun deleteReward(rewardId: String) {
+        triggerHaptic()
+        repository.deleteReward(rewardId)
+    }
+
+    // ==========================================
+    // GEMINI CHATBOT (مستر حجاج الذكي)
+    // ==========================================
+    fun sendChatMessage(text: String) {
+        val trimmed = text.trim()
+        if (trimmed.isBlank() || _isChatLoading.value) return
+
+        val userMsg = com.example.ai.ChatMessage(
+            id = "user_${System.currentTimeMillis()}",
+            sender = "user",
+            text = trimmed
+        )
+        _chatMessages.value = _chatMessages.value + userMsg
+        _isChatLoading.value = true
+
+        viewModelScope.launch {
+            val reply = com.example.ai.GeminiChatService.sendMessage(
+                history = _chatMessages.value,
+                userMessage = trimmed,
+                studentName = userName.value
+            )
+            val modelMsg = com.example.ai.ChatMessage(
+                id = "model_${System.currentTimeMillis()}",
+                sender = "model",
+                text = reply
+            )
+            _chatMessages.value = _chatMessages.value + modelMsg
+            _isChatLoading.value = false
+        }
     }
 
     private fun triggerHaptic() {

@@ -21,6 +21,9 @@ class TaskRepository(private val context: Context) {
     private val _tasks = MutableStateFlow<List<StudyTask>>(emptyList())
     val tasks: StateFlow<List<StudyTask>> = _tasks.asStateFlow()
 
+    private val _rewards = MutableStateFlow<List<StudyReward>>(emptyList())
+    val rewards: StateFlow<List<StudyReward>> = _rewards.asStateFlow()
+
     private val _sessions = MutableStateFlow<List<StudySession>>(emptyList())
     val sessions: StateFlow<List<StudySession>> = _sessions.asStateFlow()
 
@@ -161,6 +164,84 @@ class TaskRepository(private val context: Context) {
             _focusMinutes.value = 80
             _streakDays.value = 2
             prefs.edit().putInt("focus_minutes", 80).putInt("streak_days", 2).apply()
+        }
+
+        // Load rewards
+        val rewardsJson = prefs.getString("study_rewards", null)
+        if (rewardsJson.isNullOrEmpty()) {
+            val defaultRewards = listOf(
+                StudyReward(
+                    id = "rew_1",
+                    title = "نص ساعة لعب بلايستيشن أو ببجي",
+                    description = "العب بضمير مرتاح من غير ما حد يقولك سيب الدراع وقوم ذاكر!",
+                    requiredSessions = 2,
+                    category = "ألعاب وترفيه",
+                    emoji = "🎮"
+                ),
+                StudyReward(
+                    id = "rew_2",
+                    title = "حاجة حلوة وشيكولاتة أو آيس كريم",
+                    description = "جرعة سكر تروّق دمك وتغذي خلايا المخ بعد التركيز!",
+                    requiredSessions = 1,
+                    category = "حلويات وأكل",
+                    emoji = "🍫"
+                ),
+                StudyReward(
+                    id = "rew_3",
+                    title = "نص ساعة تيك توك وسوشيال ميديا",
+                    description = "تصفح الفيديوهات وإنت رافع راسك ومخلص اللي وراك!",
+                    requiredSessions = 3,
+                    category = "سوشيال ميديا",
+                    emoji = "📱"
+                ),
+                StudyReward(
+                    id = "rew_4",
+                    title = "خروجة وأكلة شاورما أو بيتزا مع صحابك",
+                    description = "مكافأة الدحيح الكبيرة بعد أسبوع كفاح وفرم في المناهج!",
+                    requiredSessions = 5,
+                    category = "خروجات",
+                    emoji = "🍕"
+                ),
+                StudyReward(
+                    id = "rew_5",
+                    title = "فرجة على فيلم أو حلقة أنمي كاملة",
+                    description = "سهرة فيلم محترم وإنت مخلص واجبات تانية إعدادي كلها!",
+                    requiredSessions = 4,
+                    category = "أفلام وأنيمي",
+                    emoji = "🎬"
+                ),
+                StudyReward(
+                    id = "rew_6",
+                    title = "نومة الضهرية الملكية ساعة كاملة",
+                    description = "نومة رايقة من غير ما حد يدخل يصحيك أو يزعقلك!",
+                    requiredSessions = 2,
+                    category = "راحة وكسل",
+                    emoji = "😴"
+                )
+            )
+            _rewards.value = defaultRewards
+            saveRewards(defaultRewards)
+        } else {
+            val list = mutableListOf<StudyReward>()
+            try {
+                val array = JSONArray(rewardsJson)
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    list.add(
+                        StudyReward(
+                            id = obj.getString("id"),
+                            title = obj.getString("title"),
+                            description = obj.optString("description", ""),
+                            requiredSessions = obj.getInt("requiredSessions"),
+                            category = obj.optString("category", "مكافأة"),
+                            emoji = obj.optString("emoji", "🎁"),
+                            isClaimed = obj.optBoolean("isClaimed", false),
+                            claimedAt = if (obj.has("claimedAt")) obj.getLong("claimedAt") else null
+                        )
+                    )
+                }
+            } catch (_: Exception) {}
+            _rewards.value = list
         }
     }
 
@@ -338,6 +419,62 @@ class TaskRepository(private val context: Context) {
             .apply()
 
         scheduleOrUpdateAlarm()
+    }
+
+    private fun saveRewards(list: List<StudyReward>) {
+        try {
+            val array = JSONArray()
+            for (r in list) {
+                val obj = JSONObject().apply {
+                    put("id", r.id)
+                    put("title", r.title)
+                    put("description", r.description)
+                    put("requiredSessions", r.requiredSessions)
+                    put("category", r.category)
+                    put("emoji", r.emoji)
+                    put("isClaimed", r.isClaimed)
+                    if (r.claimedAt != null) put("claimedAt", r.claimedAt)
+                }
+                array.put(obj)
+            }
+            prefs.edit().putString("study_rewards", array.toString()).apply()
+        } catch (_: Exception) {}
+    }
+
+    fun claimReward(id: String) {
+        val updated = _rewards.value.map {
+            if (it.id == id) it.copy(isClaimed = true, claimedAt = System.currentTimeMillis()) else it
+        }
+        _rewards.value = updated
+        saveRewards(updated)
+    }
+
+    fun resetReward(id: String) {
+        val updated = _rewards.value.map {
+            if (it.id == id) it.copy(isClaimed = false, claimedAt = null) else it
+        }
+        _rewards.value = updated
+        saveRewards(updated)
+    }
+
+    fun addCustomReward(title: String, description: String, requiredSessions: Int, category: String, emoji: String) {
+        val newReward = StudyReward(
+            id = "rew_${System.currentTimeMillis()}",
+            title = title.trim(),
+            description = description.trim(),
+            requiredSessions = requiredSessions.coerceAtLeast(1),
+            category = category.trim().ifEmpty { "مكافأة مخصصة" },
+            emoji = emoji.trim().ifEmpty { "🎁" }
+        )
+        val updated = _rewards.value + newReward
+        _rewards.value = updated
+        saveRewards(updated)
+    }
+
+    fun deleteReward(id: String) {
+        val updated = _rewards.value.filter { it.id != id }
+        _rewards.value = updated
+        saveRewards(updated)
     }
 
     private fun scheduleOrUpdateAlarm() {

@@ -57,4 +57,19 @@ class ExampleRobolectricTest {
       }
     }
   }
+
+  @Test
+  fun `verify rewards repository initialization and claiming`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val repo = com.example.data.TaskRepository(context)
+    val rewards = repo.rewards.value
+    assertTrue("Rewards should have default rewards loaded", rewards.isNotEmpty())
+    val gameReward = rewards.find { it.title.contains("لعب") || it.emoji == "🎮" }
+    assertNotNull("Gaming reward should exist", gameReward)
+    
+    val rewardId = rewards.first().id
+    repo.claimReward(rewardId)
+    val claimedReward = repo.rewards.value.find { it.id == rewardId }
+    assertTrue(claimedReward?.isClaimed == true)
+  }
 }

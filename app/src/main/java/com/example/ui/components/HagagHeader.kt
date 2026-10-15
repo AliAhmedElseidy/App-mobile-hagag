@@ -47,6 +47,7 @@ fun HagagHeader(
     levelTitle: String,
     isSpeaking: Boolean,
     onShoutClick: () -> Unit,
+    onStatsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -124,19 +125,35 @@ fun HagagHeader(
                 }
             }
 
-            IconButton(
-                onClick = onShoutClick,
-                modifier = Modifier
-                    .testTag("header_sound_button")
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.VolumeUp,
-                    contentDescription = "تشغيل الصوت",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (onStatsClick != null) {
+                    IconButton(
+                        onClick = onStatsClick,
+                        modifier = Modifier
+                            .testTag("header_stats_button")
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF334155))
+                    ) {
+                        Text(text = "📊", fontSize = 18.sp)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                IconButton(
+                    onClick = onShoutClick,
+                    modifier = Modifier
+                        .testTag("header_sound_button")
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VolumeUp,
+                        contentDescription = "تشغيل الصوت",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         }
     }
