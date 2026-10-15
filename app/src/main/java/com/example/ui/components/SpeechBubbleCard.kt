@@ -102,7 +102,7 @@ fun SpeechBubbleCard(
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "${quote.severityEmoji} ${quote.category}",
+                        text = "${quote.severityEmoji} ${quote.category.label}",
                         style = MaterialTheme.typography.labelMedium,
                         color = PrimaryAmber,
                         fontWeight = FontWeight.Bold

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,15 +19,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,6 +61,7 @@ fun HomeScreen(
     viewModel: HagagViewModel,
     onNavigateToTimer: () -> Unit,
     onNavigateToTasks: () -> Unit,
+    onNavigateToQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val userName by viewModel.userName.collectAsState()
@@ -80,9 +85,51 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Main Hero Speech Bubble
+            // Streak Broken Egyptian Alert
+            if (stats.streakBrokenAlert != null) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF450A0A))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "تحذير",
+                                tint = AccentFlame,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "قطعت السلسلة يا حجاج! 💔",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stats.streakBrokenAlert ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFFFECACA)
+                                )
+                            }
+                            IconButton(onClick = { viewModel.dismissStreakBrokenAlert() }) {
+                                Icon(Icons.Default.Close, contentDescription = "إغلاق", tint = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Main Hero Speech Bubble Card
             item {
                 SpeechBubbleCard(
                     quote = quote,
@@ -104,6 +151,11 @@ fun HomeScreen(
                 )
             }
 
+            // Quick 2nd Prep Quiz Callout
+            item {
+                QuickQuizCallout(onNavigateToQuiz = onNavigateToQuiz)
+            }
+
             // Genius Meter
             item {
                 GeniusMeterCard(stats = stats)
@@ -117,7 +169,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "مهام المذاكرة لليوم 📝",
+                        text = "جدول مواد تانية إعدادي 📝",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -126,7 +178,7 @@ fun HomeScreen(
                     )
                     TextButton(onClick = onNavigateToTasks) {
                         Text(
-                            text = "عرض الكل (${tasks.size})",
+                            text = "عرض كل المواد (${tasks.size})",
                             color = PrimaryAmber,
                             fontWeight = FontWeight.Bold
                         )
@@ -165,9 +217,7 @@ private fun QuickFocusBanner(
             .fillMaxWidth()
             .testTag("quick_focus_banner"),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E293B)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
     ) {
         Row(
             modifier = Modifier
@@ -197,12 +247,12 @@ private fun QuickFocusBanner(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "جلسة بومودورو 25 دقيقة",
+                        text = "جلسة بومودورو 25 دقيقة ⏱️",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
                     Text(
-                        text = "اقفل تيك توك وسيب السرير!",
+                        text = "اقفل تيك توك وسيب اللحاف وقوم!",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -220,14 +270,69 @@ private fun QuickFocusBanner(
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "بدء",
+                    contentDescription = "ابدأ",
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "ابدأ",
+                    text = "ابدأ فوراً",
                     fontWeight = FontWeight.Bold
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickQuizCallout(
+    onNavigateToQuiz: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onNavigateToQuiz),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryAmber.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Psychology,
+                        contentDescription = "كويز",
+                        tint = PrimaryAmber,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "كويز الفهامة لتانية إعدادي 🧠",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
+                    Text(
+                        text = "10 أسئلة سريعة أوفلاين في كل مادة!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFCBD5E1)
+                    )
+                }
+            }
+
+            TextButton(onClick = onNavigateToQuiz) {
+                Text("جرّب مخك 💡", color = PrimaryAmber, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -244,9 +349,7 @@ private fun QuickTaskItem(
             .clickable(onClick = onToggle)
             .testTag("task_item_${task.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceCard
-        )
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard)
     ) {
         Row(
             modifier = Modifier
@@ -258,12 +361,7 @@ private fun QuickTaskItem(
                 modifier = Modifier
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (task.isCompleted) AccentEmerald else Color.Transparent
-                    )
-                    .background(
-                        if (!task.isCompleted) Color(0xFF334155) else Color.Transparent
-                    ),
+                    .background(if (task.isCompleted) AccentEmerald else Color(0xFF334155)),
                 contentAlignment = Alignment.Center
             ) {
                 if (task.isCompleted) {
@@ -302,9 +400,7 @@ private fun EgyptianHumorCard(userName: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E1B4B)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B))
     ) {
         Row(
             modifier = Modifier
@@ -312,11 +408,7 @@ private fun EgyptianHumorCard(userName: String) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "💡",
-                fontSize = 28.sp,
-                modifier = Modifier.padding(end = 12.dp)
-            )
+            Text(text = "💡", fontSize = 28.sp, modifier = Modifier.padding(end = 12.dp))
             Column {
                 Text(
                     text = "نصيحة الدحيحة لـ $userName",
@@ -325,7 +417,7 @@ private fun EgyptianHumorCard(userName: String) {
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "المذاكرة 25 دقيقة أسهل بكتير من إحساس الندم لما تشوف ورقة الامتحان!",
+                    text = "المذاكرة 25 دقيقة أسهل بكتير من إحساس الندم لما تشوف ورقة امتحان تانية إعدادي!",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White
                 )

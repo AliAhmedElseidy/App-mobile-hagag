@@ -73,7 +73,7 @@ fun TasksScreen(
     var selectedSubjectFilter by remember { mutableStateOf("الكل") }
     var showAddDialog by remember { mutableStateOf(false) }
 
-    val subjects = listOf("الكل", "فيزياء", "رياضيات", "كيمياء", "إنجليزي", "عربي", "أخرى")
+    val subjects = listOf("الكل", "رياضيات", "علوم", "لغة عربية", "إنجليزي", "دراسات", "أخرى")
 
     val filteredTasks = tasks.filter {
         selectedSubjectFilter == "الكل" || it.subject == selectedSubjectFilter
@@ -311,16 +311,16 @@ private fun AddTaskDialog(
     onAddTask: (subject: String, title: String, minutes: Int) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
-    var subject by remember { mutableStateOf("فيزياء") }
+    var subject by remember { mutableStateOf("رياضيات") }
     var minutes by remember { mutableStateOf(30) }
 
-    val presetSubjects = listOf("فيزياء", "رياضيات", "كيمياء", "إنجليزي", "أحياء", "تاريخ", "عربي")
+    val presetSubjects = listOf("رياضيات", "علوم", "لغة عربية", "إنجليزي", "دراسات", "أخرى")
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "إضافة مهمة مذاكرة جديدة 📝",
+                text = "إضافة مهمة مذاكرة لتانية إعدادي 📝",
                 fontWeight = FontWeight.Bold
             )
         },
@@ -329,8 +329,8 @@ private fun AddTaskDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("اسم المهمة أو الفصل") },
-                    placeholder = { Text("مثال: حل 20 مسألة على المقاومات") },
+                    label = { Text("اسم الدرس أو الفصل") },
+                    placeholder = { Text("مثال: حل مسائل الجذر التكعيبي") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("task_title_input"),
@@ -390,12 +390,12 @@ private fun AddTaskDialog(
                 ),
                 modifier = Modifier.testTag("confirm_add_task_button")
             ) {
-                Text("إضافة المهمة", fontWeight = FontWeight.Bold)
+                Text("سجل المهمة يلا 🚀", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("إلغاء")
+                Text("إلغاء وفكك")
             }
         }
     )

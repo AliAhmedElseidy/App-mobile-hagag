@@ -3,7 +3,6 @@ package com.example.ui.screens
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,7 +53,6 @@ import com.example.ui.HagagViewModel
 import com.example.ui.theme.AccentCyan
 import com.example.ui.theme.AccentEmerald
 import com.example.ui.theme.AccentFlame
-import com.example.ui.theme.AccentOrange
 import com.example.ui.theme.PrimaryAmber
 import com.example.ui.theme.SurfaceCard
 
@@ -66,6 +66,7 @@ fun TimerScreen(
     val timeLeft by viewModel.timeLeftSeconds.collectAsState()
     val totalDuration by viewModel.selectedDurationMinutes.collectAsState()
     val isBreak by viewModel.isBreak.collectAsState()
+    val currentSubject by viewModel.timerSubject.collectAsState()
 
     val totalSeconds = totalDuration * 60
     val progressRatio = if (totalSeconds > 0) {
@@ -82,17 +83,19 @@ fun TimerScreen(
     val seconds = timeLeft % 60
     val timeFormatted = String.format("%02d:%02d", minutes, seconds)
 
+    val prepSubjects = listOf("رياضيات", "علوم", "لغة عربية", "إنجليزي", "دراسات", "عام")
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .testTag("timer_screen"),
         contentPadding = PaddingValues(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item {
             Text(
-                text = if (isBreak) "☕ استراحة شاي" else "⏱️ مؤقت التركيز والمذاكرة",
+                text = if (isBreak) "☕ استراحة شاي يا برنس" else "⏱️ مؤقت التركيز والمذاكرة",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 22.sp
@@ -103,11 +106,11 @@ fun TimerScreen(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = if (isBreak) {
-                    "اشرب شايك يا $userName وارجع بسرعة!"
+                    "اشرب شايك يا $userName وبلاش تفتح تيك توك وتنسى نفسك!"
                 } else if (isRunning) {
-                    "$userName بيذاكر بتركيز.. ممنوع اللمس! 🤫"
+                    "$userName بيذاكر $currentSubject بتركيز.. ممنوع اللمس! 🤫"
                 } else {
-                    "اختار المدة وابدأ المذاكرة فوراً يا بطل!"
+                    "اختار المادة والمدة وابدأ المذاكرة فوراً وبطل تسويف!"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isRunning) AccentEmerald else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -115,11 +118,40 @@ fun TimerScreen(
             )
         }
 
+        // Subject selector for the study session
+        if (!isBreak && !isRunning) {
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "بتذاكر إيه دلوقتي في تانية إعدادي؟",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = PrimaryAmber
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(prepSubjects) { sub ->
+                            FilterChip(
+                                selected = currentSubject == sub,
+                                onClick = { viewModel.setTimerSubject(sub) },
+                                label = { Text(sub, fontSize = 12.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryAmber,
+                                    selectedLabelColor = Color.Black,
+                                    containerColor = Color(0xFF1E293B),
+                                    labelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Circular Countdown Timer
         item {
             Box(
                 modifier = Modifier
-                    .size(260.dp)
+                    .size(250.dp)
                     .testTag("timer_circle"),
                 contentAlignment = Alignment.Center
             ) {
@@ -128,12 +160,10 @@ fun TimerScreen(
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 16.dp.toPx()
-                    // Background track
                     drawCircle(
                         color = trackColor,
                         style = Stroke(width = strokeWidth)
                     )
-                    // Progress arc
                     drawArc(
                         color = circleColor,
                         startAngle = -90f,
@@ -143,23 +173,28 @@ fun TimerScreen(
                     )
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = timeFormatted,
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Black,
-                            fontSize = 48.sp
+                            fontSize = 46.sp
                         ),
                         color = Color.White
                     )
                     Text(
-                        text = if (isRunning) "جاري التركيز ⏳" else "جاهز للبدء ✨",
+                        text = if (isRunning) "جاري الفرم والتركيز ⏳" else "جاهز تبدأ يا بطل؟ ✨",
                         style = MaterialTheme.typography.labelMedium,
                         color = circleColor,
                         fontWeight = FontWeight.Bold
                     )
+                    if (isRunning && !isBreak) {
+                        Text(
+                            text = "مادة: $currentSubject",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PrimaryAmber
+                        )
+                    }
                 }
             }
         }
@@ -209,7 +244,7 @@ fun TimerScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "إعادة الضبط",
+                        contentDescription = "إعادة ضبط",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -233,12 +268,12 @@ fun TimerScreen(
                 ) {
                     Icon(
                         imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isRunning) "إيقاف" else "بدء",
+                        contentDescription = if (isRunning) "إيقاف مؤقت" else "ابدأ فوراً",
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isRunning) "إيقاف مؤقت" else "ابدأ الآن!",
+                        text = if (isRunning) "وقّف شوية" else "ابدأ فوراً!",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
@@ -264,7 +299,7 @@ fun TimerScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "حاسس بكسل أو عايز تستسلم؟",
+                        text = "حاسس بكسل أو السرير بيناديك؟",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
@@ -285,12 +320,16 @@ fun TimerScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "سمّعني تهزيء يصحصحني! 📢",
+                            text = "سمّعني زعيق يفوقني! 📢",
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
